@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="/home/stephen/Downloads/java/rxtx-2.1-7-bins-r2/Linux/i686-unknown-linux-gnu"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk1.6.0_29"/>
+	<classpathentry kind="con" path="org.apache.ivyde.eclipse.cpcontainer.IVYDE_CONTAINER/?ivyXmlPath=ivy.xml&amp;confs=*&amp;doRetrieve=true&amp;retrievePattern=lib%2F%5Bartifact%5D.%5Bext%5D&amp;retrieveSync=true&amp;retrieveConfs=*&amp;retrieveTypes=*">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="/home/stephen/JMF-2.1.1e/lib"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="ext-lib/jl1.0.jar"/>
+	<classpathentry kind="lib" path="ext-lib/mp3spi1.9.4.jar"/>
+	<classpathentry kind="lib" path="ext-lib/tritonus_aos.jar"/>
+	<classpathentry kind="lib" path="ext-lib/tritonus_share.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/minim-java"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

@@ -1,0 +1,6 @@
+Debug
+Release
+bin
+.metadata
+*.pdf
+*.svg

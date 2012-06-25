@@ -1,0 +1,6 @@
+bin/
+lib/
+run.sh
+mp3/
+dist/
+*.zip

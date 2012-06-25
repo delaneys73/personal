@@ -1,0 +1,87 @@
+body {
+	font-family:verdana;
+	font-size: 12px;
+	background-color: #004080;
+	background-image: url(/images/Christmas-Lights.png);
+	color:#fff;
+}
+
+.body {
+	background-color: #000;
+	border-radius: 0 0 10px 10px;
+	border: 2px solid #fff;
+	padding: 2px;
+	opacity: 0.8;
+}
+
+.musicList a,a:visited,.musicList a:hover {
+	font-size: 14px;
+	color: #000;
+	font-weight: bold;
+	background-color: #fff;
+	border-radius: 8px;
+	height: 25px;
+	border: 1px solid #fff;
+	padding: 3px;
+	text-decoration: none; 
+	margin-botton: 4px;
+}
+
+.musicList {
+	width: 100%;
+	list-style: none;
+	padding-left:0px;
+	margin-left:0px;
+}
+
+.musicList li {
+	width: 100%;
+	list-style: none;
+	padding-left:0px;
+	margin-left:0px;
+	height: 25px;
+	margin-bottom: 10px;	
+}
+
+.message {
+	font-size: 14px;
+	font-weight: normal;
+	padding: 5px;
+	background-color: #00dd00;
+	color: #000;
+	border:4px double #fff;
+	border-radius: 10px;
+}
+
+.tabs {
+	display: block;
+	margin:0;
+	padding:0;	
+	height:29px;
+}
+
+.tabs .tab {
+	float:left;
+	padding-left:2px;
+}
+
+.tab a,.tab a:visited,.tab a:active  {
+    color:#fff;
+}
+
+.tab {
+	border-top: 4px solid #fff;
+	border-left: 4px solid #fff;
+	border-right: 4px solid #fff;
+	border-radius: 8px 8px 0 0;
+	width: 75px;
+	height : 25px;
+	background-color: #000;
+	margin-right: 5px;
+	font-size: 16px;
+}
+
+.selectedTab {
+	background-color: #fff;
+	color: #000;
+}

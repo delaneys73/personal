@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:mvc="http://www.springframework.org/schema/mvc"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+        http://www.springframework.org/schema/util http://www.springframework.org/schema/context/spring-util-3.0.xsd">
+ 
+    <!-- DispatcherServlet Context: defines this servlet's request-processing infrastructure -->
+ 
+    <!-- Scans within the base package of the application for @Components to configure as beans -->
+    <!-- @Controller, @Service, @Configuration, etc. -->
+    <!-- <context:component-scan base-package="org.delaney.xmas.mvc" /> -->
+ 
+    <!-- Enables the Spring MVC @Controller programming model -->
+    <mvc:annotation-driven />
+ 
+ 	<context:property-placeholder location="file://${user.dir}/etc/server.properties"/>
+
+ 
+ 	<bean id="sequencePlayer" class="org.delaney.xmas.music.jlayer.JLayerMusicPlayer">
+ 		<property name="timerFactory" ref="timerFactory"/>
+ 		<property name="timerFrequency" value="${sequence.timing.resolution}"/>
+ 		<property name="sender" ref="sender"/>
+ 	</bean>
+ 	
+ 	<bean id="autosensePlayer" class="org.delaney.xmas.music.minim.MinimMusicPlayer">
+ 		<property name="sender" ref="sender"/>
+ 		<property name="beatLight" value="${autosense.beat.output}"/>
+ 		<property name="beatDetect" value="${autosense.beat.detect}"/>
+ 		<property name="lightFrom" value="${autosense.light.from}"/>
+ 		<property name="lightTo" value="${autosense.light.to}"/>
+ 		<property name="timingResolution" value="${autosense.timing.resolution}"/>
+ 	</bean>
+ 	<!-- 
+ 	<bean id="senderFactory" class="org.delaney.xmas.comms.CommSenderFactory">
+ 		<property name="implClass" value="org.delaney.xmas.comms.SerialPortSender"/>
+ 		<property name="options">
+ 			<value>
+ 			baudRate=${comm.rate}
+ 			commPortName=${comm.port}
+ 			bufferSize=${comm.buffer}
+ 			</value>
+ 		</property>
+ 		<property name="senderMap">
+ 			<value>
+ 			0-7=${comm.port}
+ 			</value>
+ 		</property>
+ 	</bean>
+ 	-->
+ 	<bean id="dummySender" class="org.delaney.xmas.comms.DummySender" />
+ 	
+ 	<bean id="sender" class="org.delaney.xmas.comms.SerialPortSender" init-method="init">
+ 		<property name="commPortName" value="${comm.port}"/>
+ 		<property name="baudRate" value="${comm.rate}"/>
+ 		<property name="bufferSize" value="${comm.buffer}"/>
+ 		<property name="outputLines" value="${output.lines}"/>
+ 		<property name="autoDelay" value="${auto.delay}"/>
+ 	</bean>
+ 
+ 	<bean id="timerFactory" class="org.delaney.xmas.music.jlayer.PlaybackTimerFactory">
+ 		<property name="sender" ref="sender"/>
+ 	</bean>
+ 
+ 	<bean id="controller" class="org.delaney.xmas.mvc.MusicController">
+ 		<property name="defaultPlayer" ref="autosensePlayer"/>
+ 		<property name="sequencePlayer" ref="sequencePlayer"/>
+ 		<property name="musicDirectory" value="${music.dir}"/>
+ 		<property name="allowOverride" value="${allow.override}"/>
+ 		<property name="extensions" value="${music.extensions}"/>
+ 	</bean>
+ 	
+ 	<bean id="viewResolver"
+      class="org.springframework.web.servlet.view.UrlBasedViewResolver">
+		    <property name="viewClass" value="org.springframework.web.servlet.view.JstlView"/>
+		    <property name="prefix" value="/WEB-INF/views/"/>
+		    <property name="suffix" value=".jsp"/>
+	</bean>
+</beans>

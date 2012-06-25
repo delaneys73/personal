@@ -1,0 +1,4 @@
+#!/bin/sh
+
+APPDIR=$(dirname "$0")
+java  -Djava.library.path="$APPDIR" -cp "$APPDIR/lib/EssMusic.jar:$APPDIR/lib/core.jar:$APPDIR/lib/gluegen-rt.jar:$APPDIR/lib/opengl.jar:$APPDIR/lib/jogl.jar:$APPDIR/lib/minim-spi.jar:$APPDIR/lib/tritonus_share.jar:$APPDIR/lib/mp3spi1.9.4.jar:$APPDIR/lib/jl1.0.jar:$APPDIR/lib/tritonus_aos.jar:$APPDIR/lib/jsminim.jar:$APPDIR/lib/minim.jar" EssMusic

@@ -1,0 +1,348 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<!-- Created with Fritzing (http://www.fritzing.org/) -->
+<svg width="1.92222in" x="0in" version="1.2" y="0in" xmlns="http://www.w3.org/2000/svg" height="2.28889in" viewBox="0 0 138.4 164.8" baseProfile="tiny" xmlns:svg="http://www.w3.org/2000/svg">
+ <g transform="matrix(-1, 0, 0, 1, 138.4, 0)">
+  <g  id="silkscreen" stroke-width="0">
+   <line  stroke="black" y1="0.288" x1="0.288" y2="0.288" stroke-width="0.576" x2="137.886"/>
+   <line  stroke="black" y1="0.288" x1="137.886" y2="165.024" stroke-width="0.576" x2="137.886"/>
+   <line  stroke="black" y1="165.024" x1="137.886" y2="165.024" stroke-width="0.576" x2="0.288"/>
+   <line  stroke="black" y1="165.024" x1="0.288" y2="0.288" stroke-width="0.576" x2="0.288"/>
+  </g>
+  <g transform="translate(68.0872,46.1178)">
+   <g fill="#000000" font-family="'OCRA'" stroke="none" font-style="normal" fill-opacity="1" font-weight="normal" id="silkscreenLabel" font-size="5">
+    <text x="0" y="3.75">ATMega328</text>
+   </g>
+  </g>
+  <g transform="translate(40.5368,102.624)">
+   <g fill="#000000" font-family="'OCRA'" stroke="none" font-style="normal" fill-opacity="1" font-weight="normal" id="silkscreenLabel" font-size="5">
+    <text x="0" y="3.75">16Mhz</text>
+   </g>
+  </g>
+  <g transform="translate(6.4104,125.743)">
+   <g fill="#000000" font-family="'OCRA'" stroke="none" font-style="normal" fill-opacity="1" font-weight="normal" id="silkscreenLabel" font-size="5">
+    <text x="0" y="3.75">C1</text>
+   </g>
+  </g>
+  <g transform="translate(13.9624,126.174)">
+   <g fill="#000000" font-family="'OCRA'" stroke="none" font-style="normal" fill-opacity="1" font-weight="normal" id="silkscreenLabel" font-size="5">
+    <text x="0" y="3.75">C2</text>
+   </g>
+  </g>
+  <g transform="translate(84.5536,1.85416)">
+   <g fill="#000000" font-family="'OCRA'" stroke="none" font-style="normal" fill-opacity="1" font-weight="normal" id="silkscreenLabel" font-size="5">
+    <text x="0" y="3.75">VR1</text>
+   </g>
+  </g>
+  <g transform="translate(55.4368,8.53232)">
+   <g fill="#000000" font-family="'OCRA'" stroke="none" font-style="normal" fill-opacity="1" font-weight="normal" id="silkscreenLabel" font-size="5">
+    <text x="0" y="3.75">C3</text>
+   </g>
+  </g>
+  <g transform="translate(104.36,3.54768)">
+   <g fill="#000000" font-family="'OCRA'" stroke="none" font-style="normal" fill-opacity="1" font-weight="normal" id="silkscreenLabel" font-size="5">
+    <text x="0" y="3.75">C4</text>
+   </g>
+  </g>
+  <g transform="translate(119.933,3.57536)">
+   <g fill="#000000" font-family="'OCRA'" stroke="none" font-style="normal" fill-opacity="1" font-weight="normal" id="silkscreenLabel" font-size="5">
+    <text x="0" y="3.75">+9V</text>
+   </g>
+  </g>
+  <g transform="translate(12.3408,48.0834)">
+   <g fill="#000000" font-family="'OCRA'" stroke="none" font-style="normal" fill-opacity="1" font-weight="normal" id="silkscreenLabel" font-size="5">
+    <text x="0" y="3.75">R1</text>
+   </g>
+  </g>
+  <g transform="translate(37.9008,35.2306)">
+   <g fill="#000000" font-family="'OCRA'" stroke="none" font-style="normal" fill-opacity="1" font-weight="normal" id="silkscreenLabel" font-size="5">
+    <text x="0" y="3.75">RESET</text>
+   </g>
+  </g>
+  <g transform="translate(33.9016,9.66768)">
+   <g fill="#000000" font-family="'OCRA'" stroke="none" font-style="normal" fill-opacity="1" font-weight="normal" id="silkscreenLabel" font-size="5">
+    <text x="0" y="3.75">+5V</text>
+   </g>
+  </g>
+  <g transform="translate(60.1424,55.165)">
+   <g fill="#000000" font-family="'OCRA'" stroke="none" font-style="normal" fill-opacity="1" font-weight="normal" id="silkscreenLabel" font-size="5">
+    <text x="0" y="3.75">J3</text>
+   </g>
+  </g>
+  <g transform="translate(55.3984,157.974)">
+   <g fill="#000000" font-family="'OCRA'" stroke="none" font-style="normal" fill-opacity="1" font-weight="normal" id="silkscreenLabel" font-size="5">
+    <text x="0" y="3.75">J4</text>
+   </g>
+  </g>
+  <g transform="translate(106.374,157.622)">
+   <g fill="#000000" font-family="'OCRA'" stroke="none" font-style="normal" fill-opacity="1" font-weight="normal" id="silkscreenLabel" font-size="5">
+    <text x="0" y="3.75">J5</text>
+   </g>
+  </g>
+  <g transform="translate(106.571,47.0194)">
+   <g fill="#000000" font-family="'OCRA'" stroke="none" font-style="normal" fill-opacity="1" font-weight="normal" id="silkscreenLabel" font-size="5">
+    <text x="0" y="3.75">J6</text>
+   </g>
+  </g>
+  <g transform="translate(12.096,71.6514)">
+   <g fill="#000000" font-family="'OCRA'" stroke="none" font-style="normal" fill-opacity="1" font-weight="normal" id="silkscreenLabel" font-size="5">
+    <text x="0" y="3.75">USB</text>
+   </g>
+  </g>
+  <g  id="silkscreen" stroke-width="0">
+   <line  stroke="black" y1="0.288" x1="0.288" y2="0.288" stroke-width="0.576" x2="137.886"/>
+   <line  stroke="black" y1="0.288" x1="137.886" y2="165.024" stroke-width="0.576" x2="137.886"/>
+   <line  stroke="black" y1="165.024" x1="137.886" y2="165.024" stroke-width="0.576" x2="0.288"/>
+   <line  stroke="black" y1="165.024" x1="0.288" y2="0.288" stroke-width="0.576" x2="0.288"/>
+  </g>
+  <g transform="translate(69.4032,53.8338)">
+   <g  id="silkscreen" stroke-width="0">
+    <line  stroke="black" y1="0.72" stroke-width="0.72" x1="0.72" y2="101.52" x2="0.72"/>
+    <line  stroke="black" y1="101.52" stroke-width="0.72" x1="0.72" y2="101.52" x2="29.52"/>
+    <line  stroke="black" y1="101.52" stroke-width="0.72" x1="29.52" y2="0.72" x2="29.52"/>
+    <line  stroke="black" y1="0.72" stroke-width="0.72" x1="0.72" y2="0.72" x2="11.52"/>
+    <line  stroke="black" y1="0.72" stroke-width="0.72" x1="18.72" y2="0.72" x2="29.52"/>
+   </g>
+  </g>
+  <g transform="translate(63.2474,114.651)">
+   <g transform="matrix(-0.707107,0.707107,-0.707107,-0.707107,0,0)">
+    <g  id="silkscreen" stroke-width="0">
+     <rect width="30.3307" x="0.425197" y="0.425197" stroke-opacity="1" fill="none"  height="13.3228" ry="6.66142" stroke="black" style="stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none" id="rect4181" stroke-width="0.708661"/>
+     <rect width="2.07874" x="14.5512" y="3.9685" stroke-opacity="1" fill="none"  height="6.23622" stroke="black" style="stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none" id="rect4193" stroke-width="0.708661"/>
+     <path stroke-opacity="1" fill="none"  stroke="black" style="stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none" id="path4195" stroke-width="0.708661" d="m17.8583,4.25197,0,5.66929"/>
+     <path stroke-opacity="1" fill="none"  stroke="black" style="stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none" id="path4199" stroke-width="0.708661" d="m13.3228,4.25197,0,5.66929"/>
+    </g>
+   </g>
+  </g>
+  <g transform="translate(20.4432,112.874)">
+   <g  id="silkscreen" stroke-width="0">
+    <path stroke-opacity="1" fill="none"  stroke="black" style="stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none" id="path2830" stroke-width="0.576" d="m6.65907,2.30036a1.84667,1.58,0,0,1,2.51037,0.001464" transform="matrix(1, 0, 0, 1, -1.43333, -1.16)"/>
+    <path stroke-opacity="1" fill="none"  stroke="black" style="stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none" id="path2830-1" stroke-width="0.576" d="m6.65907,2.30036a1.84667,1.58,0,0,1,2.51037,0.001464" transform="matrix(-1, 0, 0, -1, 14.3952, 6.92)"/>
+   </g>
+  </g>
+  <g transform="translate(20.4432,120.074)">
+   <g  id="silkscreen" stroke-width="0">
+    <path stroke-opacity="1" fill="none"  stroke="black" style="stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none" id="path2830" stroke-width="0.576" d="m6.65907,2.30036a1.84667,1.58,0,0,1,2.51037,0.001464" transform="matrix(1, 0, 0, 1, -1.43333, -1.16)"/>
+    <path stroke-opacity="1" fill="none"  stroke="black" style="stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none" id="path2830-1" stroke-width="0.576" d="m6.65907,2.30036a1.84667,1.58,0,0,1,2.51037,0.001464" transform="matrix(-1, 0, 0, -1, 14.3952, 6.92)"/>
+   </g>
+  </g>
+  <g transform="translate(102.523,6.31384)">
+   <g transform="matrix(0,1,-1,0,0,0)">
+    <g  id="silkscreen" stroke-width="0">
+     <line  stroke="black" y1="5.76" stroke-width="0.72" x1="1.44" y2="5.76" x2="30.24"/>
+     <line  stroke="black" y1="5.76" stroke-width="0.72" x1="30.24" y2="18.72" x2="30.24"/>
+     <line  stroke="black" y1="18.72" stroke-width="0.72" x1="30.24" y2="18.72" x2="1.44"/>
+     <line  stroke="black" y1="18.72" stroke-width="0.72" x1="1.44" y2="5.76" x2="1.44"/>
+     <line  stroke="black" y1="5.76" stroke-width="0.72" x1="1.44" y2="5.76" x2="30.24"/>
+     <line  stroke="black" y1="5.76" stroke-width="0.72" x1="30.24" y2="10.08" x2="30.24"/>
+     <line  stroke="black" y1="10.08" stroke-width="0.72" x1="30.24" y2="10.08" x2="1.44"/>
+     <line  stroke="black" y1="10.08" stroke-width="0.72" x1="1.44" y2="5.76" x2="1.44"/>
+     <line  stroke="black" y1="5.76" stroke-width="0.36" x1="10.8" y2="10.08" x2="10.8"/>
+     <line  stroke="black" y1="5.76" stroke-width="0.36" x1="20.88" y2="10.08" x2="20.88"/>
+    </g>
+   </g>
+  </g>
+  <g transform="translate(66.8832,18.1938)">
+   <g transform="matrix(0,1,-1,0,0,0)">
+    <g  id="silkscreen" stroke-width="0">
+     <circle fill="none" cx="7.56"  cy="7.56" stroke="black" r="7.2" id="circle7" stroke-width="0.72"/>
+     <path fill="none"  stroke="black" stroke-linecap="round" stroke-width="0.792" d="m2.88,3.6,2.16,0"/>
+     <path fill="none"  stroke="black" stroke-linecap="round" stroke-width="0.792" d="m2.88,11.52,2.16,0"/>
+    </g>
+   </g>
+  </g>
+  <g transform="translate(102.163,26.1138)">
+   <g transform="matrix(0,-1,1,0,0,0)">
+    <g  id="silkscreen" stroke-width="0">
+     <circle fill="none" cx="7.56"  cy="7.56" stroke="black" r="7.2" id="circle7" stroke-width="0.72"/>
+     <path fill="none"  stroke="black" stroke-linecap="round" stroke-width="0.792" d="m2.88,3.6,2.16,0"/>
+     <path fill="none"  stroke="black" stroke-linecap="round" stroke-width="0.792" d="m2.88,11.52,2.16,0"/>
+    </g>
+   </g>
+  </g>
+  <g transform="translate(119.083,9.91384)">
+   <g  id="silkscreen" stroke-width="0">
+    <line  stroke="black" y1="1.44" stroke-width="0.72" x1="1.44" y2="15.84" x2="1.44"/>
+    <line  stroke="black" y1="15.84" stroke-width="0.72" x1="1.44" y2="15.84" x2="8.64"/>
+    <line  stroke="black" y1="15.84" stroke-width="0.72" x1="8.64" y2="1.44" x2="8.64"/>
+    <line  stroke="black" y1="1.44" stroke-width="0.72" x1="8.64" y2="1.44" x2="1.44"/>
+    <line  stroke="black" y1="8.64" stroke-width="0.36" x1="1.44" y2="8.64" x2="8.64"/>
+   </g>
+  </g>
+  <g transform="translate(26.4192,26.6538)">
+   <g transform="matrix(0,1,-1,0,0,0)">
+    <g  id="silkscreen" stroke-width="0">
+     <line  stroke="black" y1="3.096" x1="5.4" y2="3.096" stroke-width="0.72" x2="10.584"/>
+     <line  stroke="black" y1="3.096" x1="24.984" y2="3.096" stroke-width="0.72" x2="28.8"/>
+     <line  stroke="black" y1="0.72" x1="10.584" y2="0.72" stroke-width="0.72" x2="24.984"/>
+     <line  stroke="black" y1="0.72" x1="24.984" y2="5.472" stroke-width="0.72" x2="24.984"/>
+     <line  stroke="black" y1="5.472" x1="24.984" y2="5.472" stroke-width="0.72" x2="10.584"/>
+     <line  stroke="black" y1="5.472" x1="10.584" y2="0.72" stroke-width="0.72" x2="10.584"/>
+    </g>
+   </g>
+  </g>
+  <g transform="translate(35.3024,40.9074)">
+   <g  id="silkscreen" stroke-width="0">
+    <line  stroke="black" y1="6.38928" stroke-width="0.72" x1="20.137" y2="12.0586" x2="20.137"/>
+    <line  stroke="black" y1="0.72" stroke-width="0.72" x1="5.96376" y2="0.72" x2="18.0115"/>
+    <line  stroke="black" y1="17.7278" stroke-width="0.72" x1="5.96376" y2="17.7278" x2="18.0115"/>
+    <line  stroke="black" y1="6.38928" stroke-width="0.72" x1="3.12912" y2="12.0586" x2="3.12912"/>
+    <line  stroke="black" y1="7.80696" stroke-width="0.72" x1="11.633" y2="10.6416" x2="11.633"/>
+    <line  stroke="black" y1="9.22392" stroke-width="0.72" x1="13.0507" y2="9.22392" x2="10.2161"/>
+   </g>
+  </g>
+  <g transform="translate(32.6832,17.1138)">
+   <g  id="silkscreen" stroke-width="0">
+    <line  stroke="black" y1="1.44" stroke-width="0.72" x1="1.44" y2="15.84" x2="1.44"/>
+    <line  stroke="black" y1="15.84" stroke-width="0.72" x1="1.44" y2="15.84" x2="8.64"/>
+    <line  stroke="black" y1="15.84" stroke-width="0.72" x1="8.64" y2="1.44" x2="8.64"/>
+    <line  stroke="black" y1="1.44" stroke-width="0.72" x1="8.64" y2="1.44" x2="1.44"/>
+    <line  stroke="black" y1="8.64" stroke-width="0.36" x1="1.44" y2="8.64" x2="8.64"/>
+   </g>
+  </g>
+  <g transform="translate(54.2832,60.3138)">
+   <g  id="silkscreen" stroke-width="0">
+    <line  stroke="black" y1="1.44" stroke-width="0.72" x1="1.44" y2="37.44" x2="1.44"/>
+    <line  stroke="black" y1="37.44" stroke-width="0.72" x1="1.44" y2="37.44" x2="8.64"/>
+    <line  stroke="black" y1="37.44" stroke-width="0.72" x1="8.64" y2="1.44" x2="8.64"/>
+    <line  stroke="black" y1="1.44" stroke-width="0.72" x1="8.64" y2="1.44" x2="1.44"/>
+    <line  stroke="black" y1="8.64" stroke-width="0.36" x1="1.44" y2="8.64" x2="8.64"/>
+   </g>
+  </g>
+  <g transform="translate(54.2832,125.114)">
+   <g  id="silkscreen" stroke-width="0">
+    <line  stroke="black" y1="1.44" stroke-width="0.72" x1="1.44" y2="30.24" x2="1.44"/>
+    <line  stroke="black" y1="30.24" stroke-width="0.72" x1="1.44" y2="30.24" x2="8.64"/>
+    <line  stroke="black" y1="30.24" stroke-width="0.72" x1="8.64" y2="1.44" x2="8.64"/>
+    <line  stroke="black" y1="1.44" stroke-width="0.72" x1="8.64" y2="1.44" x2="1.44"/>
+    <line  stroke="black" y1="8.64" stroke-width="0.36" x1="1.44" y2="8.64" x2="8.64"/>
+   </g>
+  </g>
+  <g transform="translate(104.683,117.914)">
+   <g  id="silkscreen" stroke-width="0">
+    <line  stroke="black" y1="1.44" stroke-width="0.72" x1="1.44" y2="37.44" x2="1.44"/>
+    <line  stroke="black" y1="37.44" stroke-width="0.72" x1="1.44" y2="37.44" x2="8.64"/>
+    <line  stroke="black" y1="37.44" stroke-width="0.72" x1="8.64" y2="1.44" x2="8.64"/>
+    <line  stroke="black" y1="1.44" stroke-width="0.72" x1="8.64" y2="1.44" x2="1.44"/>
+    <line  stroke="black" y1="8.64" stroke-width="0.36" x1="1.44" y2="8.64" x2="8.64"/>
+   </g>
+  </g>
+  <g transform="translate(104.683,53.1138)">
+   <g  id="silkscreen" stroke-width="0">
+    <line  stroke="black" y1="1.44" stroke-width="0.72" x1="1.44" y2="44.64" x2="1.44"/>
+    <line  stroke="black" y1="44.64" stroke-width="0.72" x1="1.44" y2="44.64" x2="8.64"/>
+    <line  stroke="black" y1="44.64" stroke-width="0.72" x1="8.64" y2="1.44" x2="8.64"/>
+    <line  stroke="black" y1="1.44" stroke-width="0.72" x1="8.64" y2="1.44" x2="1.44"/>
+    <line  stroke="black" y1="8.64" stroke-width="0.36" x1="1.44" y2="8.64" x2="8.64"/>
+   </g>
+  </g>
+  <g transform="translate(25.4832,60.3138)">
+   <g  id="silkscreen" stroke-width="0">
+    <line  stroke="black" y1="1.44" stroke-width="0.72" x1="1.44" y2="30.24" x2="1.44"/>
+    <line  stroke="black" y1="30.24" stroke-width="0.72" x1="1.44" y2="30.24" x2="8.64"/>
+    <line  stroke="black" y1="30.24" stroke-width="0.72" x1="8.64" y2="1.44" x2="8.64"/>
+    <line  stroke="black" y1="1.44" stroke-width="0.72" x1="8.64" y2="1.44" x2="1.44"/>
+    <line  stroke="black" y1="8.64" stroke-width="0.36" x1="1.44" y2="8.64" x2="8.64"/>
+   </g>
+  </g>
+  <g transform="translate(113.649,128.2)">
+   <g  id="silkscreen" stroke-width="0">
+    <text x="4.90612" y="2.94367" fill="black" font-family="OCRA"  text-anchor="middle" id="label" stroke-width="0" font-size="3.27074">D12</text>
+   </g>
+  </g>
+  <g transform="translate(113.314,121.279)">
+   <g  id="silkscreen" stroke-width="0">
+    <text x="4.90612" y="2.94367" fill="black" font-family="OCRA"  text-anchor="middle" id="label" stroke-width="0" font-size="3.27074">D13</text>
+   </g>
+  </g>
+  <g transform="translate(113.407,92.3866)">
+   <g  id="silkscreen" stroke-width="0">
+    <text x="4.90612" y="2.94367" fill="black" font-family="OCRA"  text-anchor="middle" id="label" stroke-width="0" font-size="3.27074">AI0</text>
+   </g>
+  </g>
+  <g transform="translate(113.965,85.4282)">
+   <g  id="silkscreen" stroke-width="0">
+    <text x="4.90612" y="2.94367" fill="black" font-family="OCRA"  text-anchor="middle" id="label" stroke-width="0" font-size="3.27074">AI1</text>
+   </g>
+  </g>
+  <g transform="translate(113.649,78.1162)">
+   <g  id="silkscreen" stroke-width="0">
+    <text x="4.90612" y="2.94367" fill="black" font-family="OCRA"  text-anchor="middle" id="label" stroke-width="0" font-size="3.27074">AI2</text>
+   </g>
+  </g>
+  <g transform="translate(113.965,70.6002)">
+   <g  id="silkscreen" stroke-width="0">
+    <text x="4.90612" y="2.94367" fill="black" font-family="OCRA"  text-anchor="middle" id="label" stroke-width="0" font-size="3.27074">AI3</text>
+   </g>
+  </g>
+  <g transform="translate(113.779,63.3074)">
+   <g  id="silkscreen" stroke-width="0">
+    <text x="4.90612" y="2.94367" fill="black" font-family="OCRA"  text-anchor="middle" id="label" stroke-width="0" font-size="3.27074">AI4</text>
+   </g>
+  </g>
+  <g transform="translate(113.5,55.7162)">
+   <g  id="silkscreen" stroke-width="0">
+    <text x="4.90612" y="2.94367" fill="black" font-family="OCRA"  text-anchor="middle" id="label" stroke-width="0" font-size="3.27074">AI5</text>
+   </g>
+  </g>
+  <g transform="translate(46.5976,77.9866)">
+   <g  id="silkscreen" stroke-width="0">
+    <text x="3.27074" y="2.94367" fill="black" font-family="OCRA"  text-anchor="middle" id="label" stroke-width="0" font-size="3.27074">D2</text>
+   </g>
+  </g>
+  <g transform="translate(35.5096,70.8794)">
+   <g  id="silkscreen" stroke-width="0">
+    <text x="9.77954" y="2.93386" fill="black" font-family="OCRA"  text-anchor="middle" id="label" stroke-width="0" font-size="3.25985">(TX)D1</text>
+   </g>
+  </g>
+  <g transform="translate(36.2904,63.3258)">
+   <g  id="silkscreen" stroke-width="0">
+    <text x="9.77954" y="2.93386" fill="black" font-family="OCRA"  text-anchor="middle" id="label" stroke-width="0" font-size="3.25985">(RX)D0</text>
+   </g>
+  </g>
+  <g transform="translate(46.3,150.526)">
+   <g  id="silkscreen" stroke-width="0">
+    <text x="3.27074" y="2.94367" fill="black" font-family="OCRA"  text-anchor="middle" id="label" stroke-width="0" font-size="3.27074">D8</text>
+   </g>
+  </g>
+  <g transform="translate(46.188,143.605)">
+   <g  id="silkscreen" stroke-width="0">
+    <text x="3.27074" y="2.94367" fill="black" font-family="OCRA"  text-anchor="middle" id="label" stroke-width="0" font-size="3.27074">D7</text>
+   </g>
+  </g>
+  <g transform="translate(32.384,135.698)">
+   <g  id="silkscreen" stroke-width="0">
+    <text x="11.4803" y="2.95208" fill="black" font-family="OCRA"  text-anchor="middle" id="label" stroke-width="0" font-size="3.28009">(PWM)D6</text>
+   </g>
+  </g>
+  <g transform="translate(32.0488,128.107)">
+   <g  id="silkscreen" stroke-width="0">
+    <text x="11.4803" y="2.95208" fill="black" font-family="OCRA"  text-anchor="middle" id="label" stroke-width="0" font-size="3.28009">(PWM)D5</text>
+   </g>
+  </g>
+  <g transform="translate(111.788,150.079)">
+   <g  id="silkscreen" stroke-width="0">
+    <text x="11.4476" y="2.94367" fill="black" font-family="OCRA"  text-anchor="middle" id="label" stroke-width="0" font-size="3.27074">D9(PWM)</text>
+   </g>
+  </g>
+  <g transform="translate(110.895,142.991)">
+   <g  id="silkscreen" stroke-width="0">
+    <text x="14.4567" y="3.25276" fill="black" font-family="OCRA"  text-anchor="middle" id="label" stroke-width="0" font-size="3.61418">D10(PWM)</text>
+   </g>
+  </g>
+  <g transform="translate(111.026,135.549)">
+   <g  id="silkscreen" stroke-width="0">
+    <text x="14.4567" y="3.25276" fill="black" font-family="OCRA"  text-anchor="middle" id="label" stroke-width="0" font-size="3.61418">D11(PWM)</text>
+   </g>
+  </g>
+  <g transform="translate(47.2856,92.293)">
+   <g  id="silkscreen" stroke-width="0">
+    <text x="3.27074" y="2.94367" fill="black" font-family="OCRA"  text-anchor="middle" id="label" stroke-width="0" font-size="3.27074">D4</text>
+   </g>
+  </g>
+  <g transform="translate(33.2768,85.4658)">
+   <g  id="silkscreen" stroke-width="0">
+    <text x="11.4476" y="2.94367" fill="black" font-family="OCRA"  text-anchor="middle" id="label" stroke-width="0" font-size="3.27074">(PWM)D3</text>
+   </g>
+  </g>
+ </g>
+</svg>

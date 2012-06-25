@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one
+   or more contributor license agreements.  See the NOTICE file
+   distributed with this work for additional information
+   regarding copyright ownership.  The ASF licenses this file
+   to you under the Apache License, Version 2.0 (the
+   "License"); you may not use this file except in compliance
+   with the License.  You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing,
+   software distributed under the License is distributed on an
+   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+   KIND, either express or implied.  See the License for the
+   specific language governing permissions and limitations
+   under the License.    
+-->
+<ivy-module version="2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
+    <info
+        organisation="delaney"
+        module="xmas-server"
+        status="integration">
+	</info>
+	<configurations>
+		<conf name="default"/>
+	</configurations>
+	<dependencies>
+		<dependency org="org.springframework" name="spring-webmvc" rev="3.0.6.RELEASE" conf="default"/>
+		<dependency org="org.slf4j" name="slf4j-log4j12" rev="1.6.4" conf="default"/>
+
+		<dependency org="org.eclipse.jetty" name="jetty-server" rev="7.2.2.v20101205"  conf="default"/>
+		<dependency org="org.eclipse.jetty" name="jetty-jsp-2.1" rev="7.2.2.v20101205"  conf="default"/>
+		<dependency org="org.eclipse.jetty" name="jetty-webapp" rev="7.2.2.v20101205"  conf="default"/>
+	
+		<dependency org="javax.media" name="jmf" rev="2.1.1e"  conf="default"/>
+		<dependency org="commons-io" name="commons-io" rev="2.1"  conf="default"/>
+		
+		<dependency org="de.huxhorn.sulky" name="de.huxhorn.sulky.3rdparty.jlayer" rev="1.0" conf="default"/>
+		
+		<dependency org="org.apache.tomcat" name="jasper" rev="6.0.33" conf="default"/>
+		<dependency org="jstl" name="jstl" rev="1.2" conf="default"/>
+		<dependency org="org.rxtx" name="rxtx" rev="2.1.7" conf="default"/>
+		
+	</dependencies>
+</ivy-module>
