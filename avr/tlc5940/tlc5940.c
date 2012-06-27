@@ -1,431 +1,490 @@
-/*
+/*  Copyright (c) 2009 by Alex Leone <acleone ~AT~ gmail.com>
 
-  tlc5940.c
+    This file is part of the Arduino TLC5940 Library.
 
-  Copyright 2010-2011 Matthew T. Pandina. All rights reserved.
+    The Arduino TLC5940 Library is free software: you can redistribute it
+    and/or modify it under the terms of the GNU General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
 
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions are met:
+    The Arduino TLC5940 Library is distributed in the hope that it will be
+    useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-  1. Redistributions of source code must retain the above copyright notice,
-  this list of conditions and the following disclaimer.
+    You should have received a copy of the GNU General Public License
+    along with The Arduino TLC5940 Library.  If not, see
+    <http://www.gnu.org/licenses/>. */
 
-  2. Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
+/** \file
+    Tlc5940 class functions. */
 
-  THIS SOFTWARE IS PROVIDED BY MATTHEW T. PANDINA "AS IS" AND ANY EXPRESS OR
-  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-  EVENT SHALL MATTHEW T. PANDINA OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-*/
-
+#include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr-standard.h>
+#include "tlc_config.h"
+#include "Tlc5940.h"
 
-#include "tlc5940.h"
+/** This will be true (!= 0) if update was just called and the data has not
+    been latched in yet. */
+volatile uint8_t tlc_needXLAT;
 
-// Define a macro for SPI Transmit
-#if (TLC5940_USART_MSPIM)
-#define TLC5940_TX(data) do {                                 \
-                           while (!(UCSR0A & (1 << UDRE0)));  \
-                           UDR0 = (data);                     \
-                         } while (0)
-#else // TLC5940_USART_MSPIM
-#define TLC5940_TX(data) do {                              \
-                           SPDR = (data);                  \
-                           while (!(SPSR & (1 << SPIF)));  \
-                         } while (0)
-#endif // TLC5940_USART_MSPIM
+/** Some of the extened library will need to be called after a successful
+    update. */
+volatile void (*tlc_onUpdateFinished)(void);
 
-#if (TLC5940_ENABLE_MULTIPLEXING)
-// In main(), set toggleRows to the two pins that should be toggled
-// to turn OFF the previous row's MOSFET, and ON the current row's MOSFET.
-uint8_t toggleRows[TLC5940_MULTIPLEX_N];
-uint8_t gsData[TLC5940_MULTIPLEX_N][gsDataSize];
-static uint8_t gsDataCache[TLC5940_MULTIPLEX_N][gsDataSize];
-uint8_t *pBack;
-#else // TLC5940_ENABLE_MULTIPLEXING
-uint8_t gsData[gsDataSize];
-#endif // TLC5940_ENABLE_MULTIPLEXING
+/** Packed grayscale data, 24 bytes (16 * 12 bits) per TLC.
 
-#if (TLC5940_USE_GPIOR0 == 0)
-volatile uint8_t gsUpdateFlag;
-#endif // TLC5940_USE_GPIOR0 == 0
+    Format: Lets assume we have 2 TLCs, A and B, daisy-chained with the SOUT of
+    A going into the SIN of B.
+    - byte 0: upper 8 bits of B.15
+    - byte 1: lower 4 bits of B.15 and upper 4 bits of B.14
+    - byte 2: lower 8 bits of B.0
+    - ...
+    - byte 24: upper 8 bits of A.15
+    - byte 25: lower 4 bits of A.15 and upper 4 bits of A.14
+    - ...
+    - byte 47: lower 8 bits of A.0
 
-#if (TLC5940_INCLUDE_GAMMA_CORRECT)
-#if (TLC5940_PWM_BITS == 12)
-#define V 4095.0
-#elif (TLC5940_PWM_BITS == 11)
-#define V 2047.0
-#elif (TLC5940_PWM_BITS == 10)
-#define V 1023.0
-#elif (TLC5940_PWM_BITS == 9)
-#define V 511.0
-#elif (TLC5940_PWM_BITS == 8)
-#define V 255.0
+    \note Normally packing data like this is bad practice.  But in this
+          situation, shifting the data out is really fast because the format of
+          the array is the same as the format of the TLC's serial interface. */
+uint8_t tlc_GSData[NUM_TLCS * 24];
+
+/** Don't add an extra SCLK pulse after switching from dot-correction mode. */
+static uint8_t firstGSInput;
+
+/** Interrupt called after an XLAT pulse to prevent more XLAT pulses. */
+ISR(TIMER1_OVF_vect)
+{
+    disable_XLAT_pulses();
+    clear_XLAT_interrupt();
+    tlc_needXLAT = 0;
+    if (tlc_onUpdateFinished) {
+        sei();
+        tlc_onUpdateFinished();
+    }
+}
+
+/** \defgroup ReqVPRG_ENABLED Functions that Require VPRG_ENABLED
+    Functions that require VPRG_ENABLED == 1.
+    You can enable VPRG by changing
+    \code #define VPRG_ENABLED    0 \endcode to
+    \code #define VPRG_ENABLED    1 \endcode in tlc_config.h
+
+    You will also have to connect Arduino digital pin 6 to TLC pin 27. (The
+    pin to be used can be changed in tlc_config.h).  If VPRG is not enabled,
+    the TLC pin should grounded (remember to unconnect TLC pin 27 from GND
+    if you do enable VPRG). */
+/* @{ */ /* @} */
+
+/** \defgroup CoreFunctions Core Libary Functions
+    These function are all prefixed with "Tlc." */
+/* @{ */
+
+/** Pin i/o and Timer setup.  The grayscale register will be reset to all
+    zeros, or whatever initialValue is set to and the Timers will start.
+    \param initialValue = 0, optional parameter specifing the inital startup
+           value */
+void tlc_init(uint16_t initialValue)
+{
+    /* Pin Setup */
+    XLAT_DDR |= _BV(XLAT_PIN);
+    BLANK_DDR |= _BV(BLANK_PIN);
+    GSCLK_DDR |= _BV(GSCLK_PIN);
+#if VPRG_ENABLED
+    VPRG_DDR |= _BV(VPRG_PIN);
+    VPRG_PORT &= ~_BV(VPRG_PIN);  // grayscale mode (VPRG low)
+#endif
+#if XERR_ENABLED
+    XERR_DDR &= ~_BV(XERR_PIN);   // XERR as input
+    XERR_PORT |= _BV(XERR_PIN);   // enable pull-up resistor
+#endif
+    BLANK_PORT |= _BV(BLANK_PIN); // leave blank high (until the timers start)
+
+    tlc_shift8_init();
+
+    tlc_set_all(initialValue);
+    tlc_update();
+    disable_XLAT_pulses();
+    clear_XLAT_interrupt();
+    tlc_needXLAT = 0;
+    pulse_pin(XLAT_PORT, XLAT_PIN);
+
+
+    /* Timer Setup */
+
+    /* Timer 1 - BLANK / XLAT */
+    TCCR1A = _BV(COM1B1);  // non inverting, output on OC1B, BLANK
+    TCCR1B = _BV(WGM13);   // Phase/freq correct PWM, ICR1 top
+    OCR1A = 1;             // duty factor on OC1A, XLAT is inside BLANK
+    OCR1B = 2;             // duty factor on BLANK (larger than OCR1A (XLAT))
+    ICR1 = TLC_PWM_PERIOD; // see tlc_config.h
+
+    /* Timer 2 - GSCLK */
+#if defined(TLC_ATMEGA_8_H)
+    TCCR2  = _BV(COM20)       // set on BOTTOM, clear on OCR2A (non-inverting),
+           | _BV(WGM21);      // output on OC2B, CTC mode with OCR2 top
+    OCR2   = TLC_GSCLK_PERIOD / 2; // see tlc_config.h
+    TCCR2 |= _BV(CS20);       // no prescale, (start pwm output)
+#elif defined(TLC_TIMER3_GSCLK)
+    TCCR3A = _BV(COM3A1)      // set on BOTTOM, clear on OCR3A (non-inverting),
+                              // output on OC3A
+           | _BV(WGM31);      // Fast pwm with ICR3 top
+    OCR3A = 0;                // duty factor (as short a pulse as possible)
+    ICR3 = TLC_GSCLK_PERIOD;  // see tlc_config.h
+    TCCR3B = _BV(CS30)        // no prescale, (start pwm output)
+           | _BV(WGM32)       // Fast pwm with ICR3 top
+           | _BV(WGM33);      // Fast pwm with ICR3 top
 #else
-#error "TLC5940_PWM_BITS must be 8, 9, 10, 11, or 12"
-#endif // TLC5940_PWM_BITS
-// Maps a linear 8-bit value to a TLC5940_PWM_BITS-bit gamma corrected value
-// This array was computer-generated using the following formula:
-// for (uint16_t x = 0; x < 256; x++)
-//   printf("%e*V+.5, ", (pow((double)x / 255.0, 2.5)));
-uint16_t TLC5940_GammaCorrect[] PROGMEM = {
-  0.000000e+00*V+.5, 9.630516e-07*V+.5, 5.447842e-06*V+.5, 1.501249e-05*V+.5,
-  3.081765e-05*V+.5, 5.383622e-05*V+.5, 8.492346e-05*V+.5, 1.248518e-04*V+.5,
-  1.743310e-04*V+.5, 2.340215e-04*V+.5, 3.045437e-04*V+.5, 3.864838e-04*V+.5,
-  4.803996e-04*V+.5, 5.868241e-04*V+.5, 7.062682e-04*V+.5, 8.392236e-04*V+.5,
-  9.861648e-04*V+.5, 1.147551e-03*V+.5, 1.323826e-03*V+.5, 1.515422e-03*V+.5,
-  1.722759e-03*V+.5, 1.946246e-03*V+.5, 2.186282e-03*V+.5, 2.443257e-03*V+.5,
-  2.717551e-03*V+.5, 3.009536e-03*V+.5, 3.319578e-03*V+.5, 3.648035e-03*V+.5,
-  3.995256e-03*V+.5, 4.361587e-03*V+.5, 4.747366e-03*V+.5, 5.152925e-03*V+.5,
-  5.578591e-03*V+.5, 6.024686e-03*V+.5, 6.491527e-03*V+.5, 6.979425e-03*V+.5,
-  7.488689e-03*V+.5, 8.019621e-03*V+.5, 8.572521e-03*V+.5, 9.147682e-03*V+.5,
-  9.745397e-03*V+.5, 1.036595e-02*V+.5, 1.100963e-02*V+.5, 1.167672e-02*V+.5,
-  1.236748e-02*V+.5, 1.308220e-02*V+.5, 1.382115e-02*V+.5, 1.458459e-02*V+.5,
-  1.537279e-02*V+.5, 1.618601e-02*V+.5, 1.702451e-02*V+.5, 1.788854e-02*V+.5,
-  1.877837e-02*V+.5, 1.969424e-02*V+.5, 2.063640e-02*V+.5, 2.160510e-02*V+.5,
-  2.260058e-02*V+.5, 2.362309e-02*V+.5, 2.467286e-02*V+.5, 2.575014e-02*V+.5,
-  2.685516e-02*V+.5, 2.798815e-02*V+.5, 2.914934e-02*V+.5, 3.033898e-02*V+.5,
-  3.155727e-02*V+.5, 3.280446e-02*V+.5, 3.408077e-02*V+.5, 3.538641e-02*V+.5,
-  3.672162e-02*V+.5, 3.808661e-02*V+.5, 3.948159e-02*V+.5, 4.090679e-02*V+.5,
-  4.236242e-02*V+.5, 4.384870e-02*V+.5, 4.536583e-02*V+.5, 4.691403e-02*V+.5,
-  4.849350e-02*V+.5, 5.010446e-02*V+.5, 5.174710e-02*V+.5, 5.342165e-02*V+.5,
-  5.512829e-02*V+.5, 5.686723e-02*V+.5, 5.863868e-02*V+.5, 6.044283e-02*V+.5,
-  6.227988e-02*V+.5, 6.415003e-02*V+.5, 6.605348e-02*V+.5, 6.799041e-02*V+.5,
-  6.996104e-02*V+.5, 7.196554e-02*V+.5, 7.400411e-02*V+.5, 7.607694e-02*V+.5,
-  7.818422e-02*V+.5, 8.032614e-02*V+.5, 8.250289e-02*V+.5, 8.471466e-02*V+.5,
-  8.696162e-02*V+.5, 8.924397e-02*V+.5, 9.156189e-02*V+.5, 9.391556e-02*V+.5,
-  9.630516e-02*V+.5, 9.873087e-02*V+.5, 1.011929e-01*V+.5, 1.036914e-01*V+.5,
-  1.062265e-01*V+.5, 1.087985e-01*V+.5, 1.114074e-01*V+.5, 1.140536e-01*V+.5,
-  1.167371e-01*V+.5, 1.194582e-01*V+.5, 1.222169e-01*V+.5, 1.250135e-01*V+.5,
-  1.278482e-01*V+.5, 1.307211e-01*V+.5, 1.336324e-01*V+.5, 1.365822e-01*V+.5,
-  1.395708e-01*V+.5, 1.425983e-01*V+.5, 1.456648e-01*V+.5, 1.487705e-01*V+.5,
-  1.519157e-01*V+.5, 1.551004e-01*V+.5, 1.583249e-01*V+.5, 1.615892e-01*V+.5,
-  1.648936e-01*V+.5, 1.682382e-01*V+.5, 1.716232e-01*V+.5, 1.750487e-01*V+.5,
-  1.785149e-01*V+.5, 1.820220e-01*V+.5, 1.855701e-01*V+.5, 1.891593e-01*V+.5,
-  1.927899e-01*V+.5, 1.964620e-01*V+.5, 2.001758e-01*V+.5, 2.039313e-01*V+.5,
-  2.077289e-01*V+.5, 2.115685e-01*V+.5, 2.154504e-01*V+.5, 2.193747e-01*V+.5,
-  2.233416e-01*V+.5, 2.273512e-01*V+.5, 2.314038e-01*V+.5, 2.354993e-01*V+.5,
-  2.396381e-01*V+.5, 2.438201e-01*V+.5, 2.480457e-01*V+.5, 2.523149e-01*V+.5,
-  2.566279e-01*V+.5, 2.609848e-01*V+.5, 2.653858e-01*V+.5, 2.698310e-01*V+.5,
-  2.743207e-01*V+.5, 2.788548e-01*V+.5, 2.834336e-01*V+.5, 2.880572e-01*V+.5,
-  2.927258e-01*V+.5, 2.974395e-01*V+.5, 3.021985e-01*V+.5, 3.070028e-01*V+.5,
-  3.118527e-01*V+.5, 3.167483e-01*V+.5, 3.216896e-01*V+.5, 3.266770e-01*V+.5,
-  3.317105e-01*V+.5, 3.367902e-01*V+.5, 3.419163e-01*V+.5, 3.470889e-01*V+.5,
-  3.523082e-01*V+.5, 3.575743e-01*V+.5, 3.628874e-01*V+.5, 3.682475e-01*V+.5,
-  3.736549e-01*V+.5, 3.791096e-01*V+.5, 3.846119e-01*V+.5, 3.901617e-01*V+.5,
-  3.957594e-01*V+.5, 4.014049e-01*V+.5, 4.070985e-01*V+.5, 4.128403e-01*V+.5,
-  4.186304e-01*V+.5, 4.244690e-01*V+.5, 4.303562e-01*V+.5, 4.362920e-01*V+.5,
-  4.422767e-01*V+.5, 4.483105e-01*V+.5, 4.543933e-01*V+.5, 4.605254e-01*V+.5,
-  4.667068e-01*V+.5, 4.729378e-01*V+.5, 4.792185e-01*V+.5, 4.855489e-01*V+.5,
-  4.919292e-01*V+.5, 4.983596e-01*V+.5, 5.048401e-01*V+.5, 5.113710e-01*V+.5,
-  5.179523e-01*V+.5, 5.245841e-01*V+.5, 5.312666e-01*V+.5, 5.380000e-01*V+.5,
-  5.447842e-01*V+.5, 5.516196e-01*V+.5, 5.585062e-01*V+.5, 5.654441e-01*V+.5,
-  5.724334e-01*V+.5, 5.794743e-01*V+.5, 5.865670e-01*V+.5, 5.937114e-01*V+.5,
-  6.009079e-01*V+.5, 6.081564e-01*V+.5, 6.154571e-01*V+.5, 6.228102e-01*V+.5,
-  6.302157e-01*V+.5, 6.376738e-01*V+.5, 6.451846e-01*V+.5, 6.527482e-01*V+.5,
-  6.603648e-01*V+.5, 6.680345e-01*V+.5, 6.757574e-01*V+.5, 6.835336e-01*V+.5,
-  6.913632e-01*V+.5, 6.992464e-01*V+.5, 7.071833e-01*V+.5, 7.151740e-01*V+.5,
-  7.232186e-01*V+.5, 7.313173e-01*V+.5, 7.394701e-01*V+.5, 7.476773e-01*V+.5,
-  7.559389e-01*V+.5, 7.642549e-01*V+.5, 7.726257e-01*V+.5, 7.810512e-01*V+.5,
-  7.895316e-01*V+.5, 7.980670e-01*V+.5, 8.066575e-01*V+.5, 8.153033e-01*V+.5,
-  8.240044e-01*V+.5, 8.327611e-01*V+.5, 8.415733e-01*V+.5, 8.504412e-01*V+.5,
-  8.593650e-01*V+.5, 8.683447e-01*V+.5, 8.773805e-01*V+.5, 8.864724e-01*V+.5,
-  8.956207e-01*V+.5, 9.048254e-01*V+.5, 9.140865e-01*V+.5, 9.234044e-01*V+.5,
-  9.327790e-01*V+.5, 9.422104e-01*V+.5, 9.516989e-01*V+.5, 9.612445e-01*V+.5,
-  9.708472e-01*V+.5, 9.805073e-01*V+.5, 9.902249e-01*V+.5, 1.000000e+00*V+.5,
-};
-#undef V
-#endif // TLC5940_INCLUDE_GAMMA_CORRECT
-
-#if (TLC5940_INCLUDE_DC_FUNCS)
-uint8_t dcData[dcDataSize];
-
-void TLC5940_SetDC(channel_t channel, uint8_t value) {
-  channel = numChannels - 1 - channel;
-  channel_t i = (channel3_t)channel * 3 / 4;
-
-  switch (channel % 4) {
-  case 0:
-    dcData[i] = (dcData[i] & 0x03) | (uint8_t)(value << 2);
-    break;
-  case 1:
-    dcData[i] = (dcData[i] & 0xFC) | (value >> 4);
-    i++;
-    dcData[i] = (dcData[i] & 0x0F) | (uint8_t)(value << 4);
-    break;
-  case 2:
-    dcData[i] = (dcData[i] & 0xF0) | (value >> 2);
-    i++;
-    dcData[i] = (dcData[i] & 0x3F) | (uint8_t)(value << 6);
-    break;
-  default: // case 3:
-    dcData[i] = (dcData[i] & 0xC0) | (value);
-    break;
-  }
+    TCCR2A = _BV(COM2B1)      // set on BOTTOM, clear on OCR2A (non-inverting),
+                              // output on OC2B
+           | _BV(WGM21)       // Fast pwm with OCR2A top
+           | _BV(WGM20);      // Fast pwm with OCR2A top
+    TCCR2B = _BV(WGM22);      // Fast pwm with OCR2A top
+    OCR2B = 0;                // duty factor (as short a pulse as possible)
+    OCR2A = TLC_GSCLK_PERIOD; // see tlc_config.h
+    TCCR2B |= _BV(CS20);      // no prescale, (start pwm output)
+#endif
+    TCCR1B |= _BV(CS10);      // no prescale, (start pwm output)
+    tlc_update();
 }
 
-void TLC5940_SetAllDC(uint8_t value) {
-  uint8_t tmp1 = (uint8_t)(value << 2);
-  uint8_t tmp2 = (uint8_t)(tmp1 << 2);
-  uint8_t tmp3 = (uint8_t)(tmp2 << 2);
-  tmp1 |= (value >> 4);
-  tmp2 |= (value >> 2);
-  tmp3 |= value;
-
-  dcData_t i = 0;
-  do {
-    dcData[i++] = tmp1;              // bits: 05 04 03 02 01 00 05 04
-    dcData[i++] = tmp2;              // bits: 03 02 01 00 05 04 03 02
-    dcData[i++] = tmp3;              // bits: 01 00 05 04 03 02 01 00
-  } while (i < dcDataSize);
+/** Clears the grayscale data array, #tlc_GSData, but does not shift in any
+    data.  This call should be followed by update() if you are turning off
+    all the outputs. */
+void tlc_clear(void)
+{
+    tlc_set_all(0);
 }
 
-#if (TLC5940_INCLUDE_SET4_FUNCS)
-// Assumes that outputs 0-3, 4-7, 8-11, 12-15 of the TLC5940 have
-// been connected together to sink more current. For a single
-// TLC5940, the parameter 'channel' should be in the range 0-3
-void TLC5940_Set4DC(channel_t channel, uint8_t value) {
-  channel = numChannels - 1 - (channel * 4) - 3;
-  channel_t i = (channel3_t)channel * 3 / 4;
-
-  uint8_t tmp1 = (uint8_t)(value << 2);
-  uint8_t tmp2 = (uint8_t)(tmp1 << 2);
-  uint8_t tmp3 = (uint8_t)(tmp2 << 2);
-  tmp1 |= (value >> 4);
-  tmp2 |= (value >> 2);
-  tmp3 |= value;
-
-  dcData[i++] = tmp1;              // bits: 05 04 03 02 01 00 05 04
-  dcData[i++] = tmp2;              // bits: 03 02 01 00 05 04 03 02
-  dcData[i] = tmp3;                // bits: 01 00 05 04 03 02 01 00
-}
-#endif // TLC5940_INCLUDE_SET4_FUNCS
-
-void TLC5940_ClockInDC(void) {
-  setHigh(DCPRG_PORT, DCPRG_PIN);
-  setHigh(VPRG_PORT, VPRG_PIN);
-  for (dcData_t i = 0; i < dcDataSize; i++)
-    TLC5940_TX(dcData[i]);
-  pulse(XLAT_PORT, XLAT_PIN);
-}
-#endif // TLC5940_INCLUDE_DC_FUNCS
-
-void TLC5940_ClockInGS(void) {
-  uint8_t firstCycleFlag = 0;
-
-  if (get_value(VPRG_PORT, VPRG_PIN)) {
-    output_low(VPRG_PORT, VPRG_PIN);
-    firstCycleFlag = 1;
-  }
-  output_low(BLANK_PORT, BLANK_PIN);
-#if (TLC5940_ENABLE_MULTIPLEXING)
-  // Loop i over gsDataCache[TLC5940_MULTIPLEX_N - 1][i]
-  gsOffset_t offset = (gsOffset_t)gsDataSize * (TLC5940_MULTIPLEX_N - 1);
-  gsData_t i = gsDataSize + 1;
-  while (--i)
-    TLC5940_TX(*(pBack + offset++)); // same as gsDataCache[TLC5940_MULTIPLEX_N - 1][i]
-#else // TLC5940_ENABLE_MULTIPLEXING
-  for (gsData_t i = 0; i < gsDataSize; i++)
-    TLC5940_TX(gsData[i]);
-#endif // TLC5940_ENABLE_MULTIPLEXING
-  output_high(BLANK_PORT, BLANK_PIN);
-  pulse(XLAT_PORT, XLAT_PIN);
-  if (firstCycleFlag)
-    pulse(SCLK_PORT, SCLK_PIN);
+/** Shifts in the data from the grayscale data array, #tlc_GSData.
+    If data has already been shifted in this grayscale cycle, another call to
+    update() will immediately return 1 without shifting in the new data.  To
+    ensure that a call to update() does shift in new data, use
+    \code while(Tlc.update()); \endcode
+    or
+    \code while(tlc_needXLAT); \endcode
+    \returns 1 if there is data waiting to be latched, 0 if data was
+             successfully shifted in */
+uint8_t tlc_update(void)
+{
+    if (tlc_needXLAT) {
+        return 1;
+    }
+    disable_XLAT_pulses();
+    if (firstGSInput) {
+        // adds an extra SCLK pulse unless we've just set dot-correction data
+        firstGSInput = 0;
+    } else {
+        pulse_pin(SCLK_PORT, SCLK_PIN);
+    }
+    uint8_t *p = tlc_GSData;
+    while (p < tlc_GSData + NUM_TLCS * 24) {
+        tlc_shift8(*p++);
+        tlc_shift8(*p++);
+        tlc_shift8(*p++);
+    }
+    tlc_needXLAT = 1;
+    enable_XLAT_pulses();
+    set_XLAT_interrupt();
+    return 0;
 }
 
-void TLC5940_Init(void) {
-#if (TLC5940_USART_MSPIM)
-  // Baud rate must be set to 0 prior to enabling the USART as SPI
-  // master, to ensure proper initialization of the XCK line.
-  UBRR0 = 0;
-#endif // TLC5940_USART_MSPIM
-  set_output(SCLK_DDR, SCLK_PIN);
-  set_output(DCPRG_DDR, DCPRG_PIN);
-  set_output(VPRG_DDR, VPRG_PIN);
-  set_output(XLAT_DDR, XLAT_PIN);
-  set_output(BLANK_DDR, BLANK_PIN);
-  set_output(SIN_DDR, SIN_PIN);
-
-  output_low(SCLK_PORT, SCLK_PIN);
-  output_low(DCPRG_PORT, DCPRG_PIN);
-  output_high(VPRG_PORT, VPRG_PIN);
-  output_low(XLAT_PORT, XLAT_PIN);
-  output_high(BLANK_PORT, BLANK_PIN);
-
-#if (TLC5940_USE_GPIOR0)
-  output_low(TLC5940_FLAGS, TLC5940_FLAG_GS_UPDATE);
-  output_low(TLC5940_FLAGS, TLC5940_FLAG_XLAT_NEEDS_PULSE);
-#else // TLC5940_USE_GPIOR0
-  gsUpdateFlag = 0;
-#endif // TLC5940_USE_GPIOR0
-
-#if (TLC5940_ENABLE_MULTIPLEXING)
-  // Initialize the write pointer for page-flipping
-  pBack = &gsDataCache[0][0];
-#endif // TLC5940_ENABLE_MULTIPLEXING
-
-#if (TLC5940_USART_MSPIM)
-  // Set USART to Master SPI mode.
-  UCSR0C = (1<<UMSEL01) | (1<<UMSEL00);
-  // Enable TX only
-  UCSR0B = (1 << TXEN0);
-  // Set baud rate. Must be set _after_ enabling the transmitter.
-  UBRR0 = 0;
-#else // TLC5940_USART_MSPIM
-  // Enable SPI, Master, set clock rate fck/2
-  SPCR = (1 << SPE) | (1 << MSTR);
-  SPSR = (1 << SPI2X);
-#endif // TLC5940_USART_MSPIM
-
-  // CTC with OCR0A as TOP
-  TCCR1A = (1 << WGM10);
-
-  // clk_io/256 (From prescaler)
-  TCCR1B = (1 << CS02);
-
-#if (TLC5940_PWM_BITS == 12)
-  OCR1A = 15; // Generate an interrupt every 4096 clock cycles
-#elif (TLC5940_PWM_BITS == 11)
-  OCR1A = 7;  // Generate an interrupt every 2048 clock cycles
-#elif (TLC5940_PWM_BITS == 10)
-  OCR1A = 3;  // Generate an interrupt every 1024 clock cycles
-#elif (TLC5940_PWM_BITS == 9)
-  OCR1A = 1;  // Generate an interrupt every 512 clock cycles
-#elif (TLC5940_PWM_BITS == 8)
-  OCR1A = 0;  // Generate an interrupt every 256 clock cycles
-#else
-#error "TLC5940_PWM_BITS must be 8, 9, 10, 11, or 12"
-#endif // TLC5940_PWM_BITS
-
-  // Enable Timer/Counter0 Compare Match A interrupt
-  TIMSK0 |= (1 << OCIE1A);
+/** Sets channel to value in the grayscale data array, #tlc_GSData.
+    \param channel (0 to #NUM_TLCS * 16 - 1).  OUT0 of the first TLC is
+           channel 0, OUT0 of the next TLC is channel 16, etc.
+    \param value (0-4095).  The grayscale value, 4095 is maximum.
+    \see get */
+void tlc_set(TLC_CHANNEL_TYPE channel, uint16_t value)
+{
+    TLC_CHANNEL_TYPE index8 = (NUM_TLCS * 16 - 1) - channel;
+    uint8_t *index12p = tlc_GSData + ((((uint16_t)index8) * 3) >> 1);
+    if (index8 & 1) { // starts in the middle
+                      // first 4 bits intact | 4 top bits of value
+        *index12p = (*index12p & 0xF0) | (value >> 8);
+                      // 8 lower bits of value
+        *(++index12p) = value & 0xFF;
+    } else { // starts clean
+                      // 8 upper bits of value
+        *(index12p++) = value >> 4;
+                      // 4 lower bits of value | last 4 bits intact
+        *index12p = ((uint8_t)(value << 4)) | (*index12p & 0xF);
+    }
 }
 
-#if (TLC5940_INCLUDE_DEFAULT_ISR)
-#if (TLC5940_ENABLE_MULTIPLEXING)
-#if (TLC5940_USE_GPIOR0)
-// This interrupt will get called every 2^TLC5940_PWM_BITS clock cycles
-ISR(TIMER0_COMPA_vect) {
-  static uint8_t *pFront = &gsData[0][0]; // read pointer
-  static uint8_t row, cycle; // initialized to 0 by default
-  setHigh(BLANK_PORT, BLANK_PIN);
-  if (getValue(TLC5940_FLAGS, TLC5940_FLAG_XLAT_NEEDS_PULSE)) {
-    pulse(XLAT_PORT, XLAT_PIN);
-    setLow(TLC5940_FLAGS, TLC5940_FLAG_XLAT_NEEDS_PULSE);
-    MULTIPLEX_PIN = toggleRows[row]; // toggle two pins at once
-    if (++row == TLC5940_MULTIPLEX_N)
-      row = 0;
-  }
-  setLow(BLANK_PORT, BLANK_PIN);
-  // Below we have 2^TLC5940_PWM_BITS cycles to send the data for the next cycle
-
-  gsOffset_t offset = (gsOffset_t)gsDataSize * row;
-  gsData_t i = gsDataSize + 1;
-  while (--i)
-    TLC5940_TX(*(pFront + offset++));
-
-  // Only page-flip if an update is not already in progress
-  if (getValue(TLC5940_FLAGS, TLC5940_FLAG_GS_UPDATE) && cycle == 0) {
-    uint8_t *tmp = pFront;
-    pFront = pBack;
-    pBack = tmp;
-    setLow(TLC5940_FLAGS, TLC5940_FLAG_GS_UPDATE);
-    __asm__ volatile ("" ::: "memory"); // ensure pBack gets re-read
-    if (++cycle == TLC5940_MULTIPLEX_N)
-      cycle = 0;
-  } else if (cycle > 0) {
-    if (++cycle == TLC5940_MULTIPLEX_N)
-      cycle = 0;
-  }
-  setHigh(TLC5940_FLAGS, TLC5940_FLAG_XLAT_NEEDS_PULSE);
+/** Gets the current grayscale value for a channel
+    \param channel (0 to #NUM_TLCS * 16 - 1).  OUT0 of the first TLC is
+           channel 0, OUT0 of the next TLC is channel 16, etc.
+    \returns current grayscale value (0 - 4095) for channel
+    \see set */
+uint16_t tlc_get(TLC_CHANNEL_TYPE channel)
+{
+    TLC_CHANNEL_TYPE index8 = (NUM_TLCS * 16 - 1) - channel;
+    uint8_t *index12p = tlc_GSData + ((((uint16_t)index8) * 3) >> 1);
+    return (index8 & 1)? // starts in the middle
+            (((uint16_t)(*index12p & 15)) << 8) | // upper 4 bits
+            *(index12p + 1)                       // lower 8 bits
+        : // starts clean
+            (((uint16_t)(*index12p)) << 4) | // upper 8 bits
+            ((*(index12p + 1) & 0xF0) >> 4); // lower 4 bits
+    // that's probably the ugliest ternary operator I've ever created.
 }
-#else // TLC5940_USE_GPIOR0
-// This interrupt will get called every 2^TLC5940_PWM_BITS clock cycles
-ISR(TIMER0_COMPA_vect) {
-  static uint8_t *pFront = &gsData[0][0]; // read pointer
-  static uint8_t xlatNeedsPulse; // initialized to 0 by default
-  static uint8_t row, cycle; // initialized to 0 by default
-  setHigh(BLANK_PORT, BLANK_PIN);
-  if (xlatNeedsPulse) {
-    pulse(XLAT_PORT, XLAT_PIN);
-    xlatNeedsPulse = 0;
-    MULTIPLEX_PIN = toggleRows[row]; // toggle two pins at once
-    if (++row == TLC5940_MULTIPLEX_N)
-      row = 0;
-  }
-  setLow(BLANK_PORT, BLANK_PIN);
-  // Below we have 2^TLC5940_PWM_BITS cycles to send the data for the next cycle
 
-  gsOffset_t offset = (gsOffset_t)gsDataSize * row;
-  gsData_t i = gsDataSize + 1;
-  while (--i) // loop over gsData[row][i] or gsDataCache[row][i]
-    TLC5940_TX(*(pFront + offset++));
-
-  // Only page-flip if an update is not already in progress
-  if (gsUpdateFlag && cycle == 0) {
-    uint8_t *tmp = pFront;
-    pFront = pBack;
-    pBack = tmp;
-    gsUpdateFlag = 0;
-    __asm__ volatile ("" ::: "memory"); // ensure pBack gets re-read
-    if (++cycle == TLC5940_MULTIPLEX_N)
-      cycle = 0;
-  } else if (cycle > 0) {
-    if (++cycle == TLC5940_MULTIPLEX_N)
-      cycle = 0;
-  }
-  xlatNeedsPulse = 1;
+/** Sets all channels to value.
+    \param value grayscale value (0 - 4095) */
+void tlc_set_all(uint16_t value)
+{
+    uint8_t firstByte = value >> 4;
+    uint8_t secondByte = (value << 4) | (value >> 8);
+    uint8_t *p = tlc_GSData;
+    while (p < tlc_GSData + NUM_TLCS * 24) {
+        *p++ = firstByte;
+        *p++ = secondByte;
+        *p++ = (uint8_t)value;
+    }
 }
-#endif // TLC5940_USE_GPIOR0
-#else // TLC5940_ENABLE_MULTIPLEXING
-#if (TLC5940_USE_GPIOR0)
-// This interrupt will get called every 2^TLC5940_PWM_BITS clock cycles
-ISR(TIMER0_COMPA_vect) {
-  setHigh(BLANK_PORT, BLANK_PIN);
-  if (getValue(TLC5940_FLAGS, TLC5940_FLAG_XLAT_NEEDS_PULSE)) {
-    setLow(TLC5940_FLAGS, TLC5940_FLAG_XLAT_NEEDS_PULSE);
-    pulse(XLAT_PORT, XLAT_PIN);
-  }
-  setLow(BLANK_PORT, BLANK_PIN);
-  // Below we have 2^TLC5940_PWM_BITS cycles to send the data for the next cycle
 
-  if (getValue(TLC5940_FLAGS, TLC5940_FLAG_GS_UPDATE)) {
-    for (gsData_t i = 0; i < gsDataSize; i++)
-      TLC5940_TX(gsData[i]);
-    setHigh(TLC5940_FLAGS, TLC5940_FLAG_XLAT_NEEDS_PULSE);
-    setLow(TLC5940_FLAGS, TLC5940_FLAG_GS_UPDATE);
-  }
-}
-#else // TLC5940_USE_GPIOR0
-// This interrupt will get called every 2^TLC5940_PWM_BITS clock cycles
-ISR(TIMER0_COMPA_vect) {
-  static uint8_t xlatNeedsPulse; // initialized to 0 by default
-  setHigh(BLANK_PORT, BLANK_PIN);
-  if (xlatNeedsPulse) {
-    xlatNeedsPulse = 0;
-    pulse(XLAT_PORT, XLAT_PIN);
-  }
-  setLow(BLANK_PORT, BLANK_PIN);
-  // Below we have 2^TLC5940_PWM_BITS cycles to send the data for the next cycle
+#if VPRG_ENABLED
 
-  if (gsUpdateFlag) {
-    for (gsData_t i = 0; i < gsDataSize; i++)
-      TLC5940_TX(gsData[i]);
-    xlatNeedsPulse = 1;
-    gsUpdateFlag = 0;
-  }
+/** \addtogroup ReqVPRG_ENABLED
+    From the \ref CoreFunctions "Core Functions":
+    - \link Tlc5940::setAllDC Tlc.setAllDC(uint8_t value(0-63)) \endlink - sets
+      all the dot correction data to value */
+/* @{ */
+
+/** Sets the dot correction for all channels to value.  The dot correction
+    value correspondes to maximum output current by
+    \f$\displaystyle I_{OUT_n} = I_{max} \times \frac{DCn}{63} \f$
+    where
+    - \f$\displaystyle I_{max} = \frac{1.24V}{R_{IREF}} \times 31.5 =
+         \frac{39.06}{R_{IREF}} \f$
+    - DCn is the dot correction value for channel n
+    \param value (0-63) */
+void tlc_setAllDC(uint8_t value)
+{
+    tlc_dcModeStart();
+
+    uint8_t firstByte = value << 2 | value >> 4;
+    uint8_t secondByte = value << 4 | value >> 2;
+    uint8_t thirdByte = value << 6 | value;
+
+    for (TLC_CHANNEL_TYPE i = 0; i < NUM_TLCS * 12; i += 3) {
+        tlc_shift8(firstByte);
+        tlc_shift8(secondByte);
+        tlc_shift8(thirdByte);
+    }
+    pulse_pin(XLAT_PORT, XLAT_PIN);
+
+    tlc_dcModeStop();
 }
-#endif // TLC5940_USE_GPIOR0
-#endif // TLC5940_ENABLE_MULTIPLEXING
-#endif // TLC5940_INCLUDE_DEFAULT_ISR
+
+/* @} */
+
+#endif
+
+#if XERR_ENABLED
+
+/** Checks for shorted/broken LEDs reported by any of the TLCs.
+    \returns 1 if a TLC is reporting an error, 0 otherwise. */
+uint8_t tlc_readXERR(void)
+{
+    return ((XERR_PINS & _BV(XERR_PIN)) == 0);
+}
+
+#endif
+
+/* @} */
+
+#if DATA_TRANSFER_MODE == TLC_BITBANG
+
+/** Sets all the bit-bang pins to output */
+void tlc_shift8_init(void)
+{
+    SIN_DDR |= _BV(SIN_PIN);   // SIN as output
+    SCLK_DDR |= _BV(SCLK_PIN); // SCLK as output
+    SCLK_PORT &= ~_BV(SCLK_PIN);
+}
+
+/** Shifts a byte out, MSB first */
+void tlc_shift8(uint8_t byte)
+{
+    for (uint8_t bit = 0x80; bit; bit >>= 1) {
+        if (bit & byte) {
+            SIN_PORT |= _BV(SIN_PIN);
+        } else {
+            SIN_PORT &= ~_BV(SIN_PIN);
+        }
+        pulse_pin(SCLK_PORT, SCLK_PIN);
+    }
+}
+
+#elif DATA_TRANSFER_MODE == TLC_SPI
+
+/** Initializes the SPI module to double speed (f_osc / 2) */
+void tlc_shift8_init(void)
+{
+    SIN_DDR    |= _BV(SIN_PIN);    // SPI MOSI as output
+    SCLK_DDR   |= _BV(SCLK_PIN);   // SPI SCK as output
+    TLC_SS_DDR |= _BV(TLC_SS_PIN); // SPI SS as output
+
+    SCLK_PORT &= ~_BV(SCLK_PIN);
+
+    SPSR = _BV(SPI2X); // double speed (f_osc / 2)
+    SPCR = _BV(SPE)    // enable SPI
+         | _BV(MSTR);  // master mode
+}
+
+/** Shifts out a byte, MSB first */
+void tlc_shift8(uint8_t byte)
+{
+    SPDR = byte; // starts transmission
+    while (!(SPSR & _BV(SPIF)))
+        ; // wait for transmission complete
+}
+
+#endif
+
+#if VPRG_ENABLED
+
+/** Switches to dot correction mode and clears any waiting grayscale latches.*/
+void tlc_dcModeStart(void)
+{
+    disable_XLAT_pulses(); // ensure that no latches happen
+    clear_XLAT_interrupt(); // (in case this was called right after update)
+    tlc_needXLAT = 0;
+    VPRG_PORT |= _BV(VPRG_PIN); // dot correction mode
+}
+
+/** Switches back to grayscale mode. */
+void tlc_dcModeStop(void)
+{
+    VPRG_PORT &= ~_BV(VPRG_PIN); // back to grayscale mode
+    firstGSInput = 1;
+}
+
+#endif
+
+/** Preinstantiated Tlc variable. */
+
+/** \defgroup ExtendedFunctions Extended Library Functions
+    These functions require an include statement at the top of the sketch. */
+/* @{ */ /* @} */
+
+/** \mainpage
+    The <a href="http://www.ti.com/lit/gpn/TLC5940">Texas Instruments TLC5940
+    </a> is a 16-channel, constant-current sink LED driver.  Each channel has
+    an individually adjustable 4096-step grayscale PWM brightness control and
+    a 64-step, constant-current sink (no LED resistors needed!).  This chip
+    is a current sink, so be sure to use common anode RGB LEDs.
+
+    Check the <a href="http://code.google.com/p/tlc5940arduino/">tlc5940arduino
+    project</a> on Google Code for updates.  To install, unzip the "Tlc5940"
+    folder to &lt;Arduino Folder&gt;/hardware/libraries/
+
+    &nbsp;
+
+    \section hardwaresetup Hardware Setup
+    The basic hardware setup is explained at the top of the Examples.  A good
+    place to start would be the BasicUse Example.  (The examples are in
+    File->Sketchbook->Examples->Library-Tlc5940).
+
+    All the options for the library are located in tlc_config.h, including
+    #NUM_TLCS, what pins to use, and the PWM period.  After changing
+    tlc_config.h, be sure to delete the Tlc5940.o file in the library folder
+    to save the changes.
+
+    &nbsp;
+
+    \section libref Library Reference
+    \ref CoreFunctions "Core Functions" (see the BasicUse Example and Tlc5940):
+    - \link Tlc5940::init Tlc.init(int initialValue (0-4095))\endlink - Call this is
+            to setup the timers before using any other Tlc functions.
+            initialValue defaults to zero (all channels off).
+    - \link Tlc5940::clear Tlc.clear()\endlink - Turns off all channels
+            (Needs Tlc.update())
+    - \link Tlc5940::set Tlc.set(uint8_t channel (0-(NUM_TLCS * 16 - 1)),
+            int value (0-4095))\endlink - sets the grayscale data for channel.
+            (Needs Tlc.update())
+    - \link Tlc5940::setAll Tlc.setAll(int value(0-4095))\endlink - sets all
+            channels to value. (Needs Tlc.update())
+    - \link Tlc5940::get uint16_t Tlc.get(uint8_t channel)\endlink - returns
+            the grayscale data for channel (see set).
+    - \link Tlc5940::update Tlc.update()\endlink - Sends the changes from any
+            Tlc.clear's, Tlc.set's, or Tlc.setAll's.
+
+    \ref ExtendedFunctions "Extended Functions".  These require an include
+    statement at the top of the sketch to use.
+
+    \ref ReqVPRG_ENABLED "Functions that require VPRG_ENABLED".  These
+    require VPRG_ENABLED == 1 in tlc_config.h
+
+    &nbsp;
+
+    \section expansion Expanding the Library
+    Lets say we wanted to add a function like "tlc_goCrazy(...)".  The first
+    thing to do is to create a source file in the library folder,
+    "tlc_my_crazy_functions.h".
+    A template for this .h file is
+    \code
+// Explination for my crazy function extension
+
+#ifndef TLC_MY_CRAZY_FUNCTIONS_H
+#define TLC_MY_CRAZY_FUNCTIONS_H
+
+#include "tlc_config.h"
+#include "Tlc5940.h"
+
+void tlc_goCrazy(void);
+
+void tlc_goCrazy(void)
+{
+    uint16_t crazyFactor = 4000;
+    Tlc.clear();
+    for (uint8_t channel = 4; channel < 9; channel++) {
+        Tlc.set(channel, crazyFactor);
+    }
+    Tlc.update();
+}
+
+#endif
+ * \endcode
+ * Now to use your library in a sketch, just add
+ * \code
+#include "tlc_my_crazy_functions.h"
+
+// ...
+
+tlc_goCrazy();
+    \endcode
+    If you would like to share your extended functions for others to use,
+    email me (acleone ~AT~ gmail.com) with the file and an example and I'll
+    include them in the library.
+
+    &nbsp;
+
+    \section bugs Contact
+    If you found a bug in the library, email me so I can fix it!
+    My email is acleone ~AT~ gmail.com
+
+    &nbsp;
+
+    \section license License - GPLv3
+    Copyright (c) 2009 by Alex Leone <acleone ~AT~ gmail.com>
+
+    This file is part of the Arduino TLC5940 Library.
+
+    The Arduino TLC5940 Library is free software: you can redistribute it
+    and/or modify it under the terms of the GNU General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    The Arduino TLC5940 Library is distributed in the hope that it will be
+    useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with The Arduino TLC5940 Library.  If not, see
+    <http://www.gnu.org/licenses/>. */
+

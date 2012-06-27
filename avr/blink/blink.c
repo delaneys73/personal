@@ -11,6 +11,7 @@
 // are available on this chip.
 #include <avr/io.h>
 #include <avr-standard.h>
+#include <Tlc5940.h>
 // define what pins the LEDs are connected to.
 // in reality, PD6 is really just '6'
 #define LED PD6
@@ -19,6 +20,7 @@ void setup()
 {
 	// initialize the direction of PORTD #6 to be an output
 	set_output(DDRD, LED);
+	tlc_init(0);
 }
 
 
@@ -26,6 +28,7 @@ void loop()
 {
 	// turn on the LED for 200ms
 	 output_high(PORTD, LED);
+	 tlc_set(15,0xFF);
 	 delay_ms(200);
 	 // now turn off the LED for another 200ms
 	 output_low(PORTD, LED);

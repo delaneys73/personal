@@ -20,7 +20,10 @@ void pulse(int port, int pin){
 		output_low((port), (pin));
 	} while (0);
 }
-
+void pulse_pin(int port,int pin){
+	port |= _BV(pin);
+	port &= ~_BV(pin);
+}
 
 // this is just a program that 'kills time' in a calibrated method
 void delay_ms(uint8_t ms) {
