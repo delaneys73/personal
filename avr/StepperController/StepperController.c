@@ -7,6 +7,9 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include <avr/io.h>
+#include <avr/eeprom.h>
+#include <avr-standard.h>
+#include <uart.h>
 
 
 #define ENABLE_PIN PB3
@@ -16,16 +19,7 @@
 
 void readSettings();
 void doStep(int dir);
-
-//Macros
-
-#define bit_get(p,m) ((p) & (m))
-#define bit_set(p,m) ((p) |= (m))
-#define bit_clear(p,m) ((p) &= ~(m))
-#define bit_flip(p,m) ((p) ^= (m))
-#define bit_write(c,p,m) (c ? bit_set(p,m) : bit_clear(p,m))
-#define BIT(x) (0x01 << (x))
-#define LONGBIT(x) ((unsigned long)0x00000001 << (x))
+void writeSettings();
 
 //Which step is the motor current on
 int step_number=-1;
@@ -62,10 +56,18 @@ volatile int step_register = 0;
 volatile int dir_register = 0;
 volatile int step_buffer_idx = 0;
 
+//Interrupt stuff
+int const INT_RISING  = 3;
+int const INT_FALLING = 2;
+int const INT_CHANGE = 1;
+
+int const ADDR_STEPS = 51;
+int const ADDR_HALFSTEP = 52;
+
 void setup()
 {
-  MCUCR |= (3 << ISC00);    // set INT0 to trigger on ANY logic change
-  MCUCR |= (1 << ISC01);    // set INT0 to trigger on ANY logic change
+  MCUCR |= (INT_RISING << ISC00);    // set INT0 to trigger on RISING logic change
+  MCUCR |= (INT_CHANGE << ISC01);    // set INT1 to trigger on ANY logic change
   GICR |= (1 << INT0);      // Turns on INT0
   GICR |= (1 << INT1);      // Turns on INT0
 
@@ -74,20 +76,32 @@ void setup()
   //Set 9,10,11,12,13 as output
   int SET_OUPUT = 0b00111110;
   DDRB = DDRB | SET_OUPUT;
+
   readSettings();
 
-  //attachInterrupt(0,intStep,RISING);
-  //attachInterrupt(1,intChgDir,CHANGE);
-  DDRD &= ~_BV(CHG_DIR_PIN);
-  PORTB |= (1 << ENABLE_PIN);
+  set_output(DDRD,CHG_DIR_PIN);
+  output_high(PORTB,ENABLE_PIN);
+
+  uart_init(9600);
+  uart_puts("Stepper Controller v1\n");
 }
 
 void readSettings()
 {
+  real_number_of_steps = eeprom_read_byte((uint8_t*)ADDR_STEPS);
+
   if (real_number_of_steps==0)
   {
      //Store some logical defaults
      real_number_of_steps = 20;
+     use_half_step = 1;
+
+     eeprom_write_byte((uint8_t*)ADDR_STEPS,real_number_of_steps);
+     eeprom_write_byte((uint8_t*)ADDR_HALFSTEP,use_half_step);
+  }
+  else
+  {
+	  use_half_step = eeprom_read_byte((uint8_t*)ADDR_HALFSTEP);
   }
 
   number_of_steps = real_number_of_steps;
@@ -120,7 +134,7 @@ ISR(INT0_vect)
 
 ISR(INT1_vect)
 {
-	  int newDir = PIND & _BV(CHG_DIR_PIN);
+	  int newDir = get_value(PIND,CHG_DIR_PIN);
 	  direction = newDir;
 }
 
@@ -168,11 +182,11 @@ void loop()
 {
    if (step_register==255)
    {
-	 PORTD |= (1 << ERROR_PIN);
+	 output_high(PORTD,ERROR_PIN);
    }
    else
    {
-	 PORTD &= ~(1 << ERROR_PIN);
+	 output_low(PORTD,ERROR_PIN);
    }
 
    if (step_register>0)
@@ -182,6 +196,16 @@ void loop()
      dir_register = dir_register >> 1;
      step_buffer_idx--;
    }
+
+   if (uart_available()>0)
+   {
+	   writeSettings();
+   }
+}
+
+void writeSettings()
+{
+
 }
 
 int main(void) {

@@ -57,7 +57,7 @@ void setup()
 // String fileName = "//mss500gb/music/xmas/Dance of the sugar plum faries.mp3";
   // String fileName = "e:/music/Katy Perry - Firework.mp3";
  // String fileName = "/home/stephen/Music/Katy Perry - Firework.mp3";
-  String fileName = "/home/stephen/Music/Wizards in Winter.mp3";  
+  String fileName = "Wizards in Winter.mp3";  
  // String fileName = "//mss500gb/music/xmas/Queen - We Will Rock You 2011 Remaster.mp3";
  // String fileName = "//mss500gb/music/xmas/Jingle-bells.mp3";
    ftf = minim.loadFile(fileName, 1024);

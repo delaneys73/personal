@@ -23,10 +23,12 @@
 							<builder buildPath="${workspace_loc:/avr-standard/Debug}" id="de.innot.avreclipse.target.builder.winavr.lib.debug.2039589861" managedBuildOn="true" name="AVR GNU Make Builder.Debug" superClass="de.innot.avreclipse.target.builder.winavr.lib.debug"/>
 							<tool id="de.innot.avreclipse.tool.assembler.winavr.lib.debug.1103421361" name="AVR Assembler" superClass="de.innot.avreclipse.tool.assembler.winavr.lib.debug">
 								<option id="de.innot.avreclipse.assembler.option.debug.level.1551248409" superClass="de.innot.avreclipse.assembler.option.debug.level"/>
+								<inputType id="de.innot.avreclipse.tool.assembler.input.820362313" superClass="de.innot.avreclipse.tool.assembler.input"/>
 							</tool>
 							<tool id="de.innot.avreclipse.tool.compiler.winavr.lib.debug.102615839" name="AVR Compiler" superClass="de.innot.avreclipse.tool.compiler.winavr.lib.debug">
 								<option id="de.innot.avreclipse.compiler.option.debug.level.704984091" superClass="de.innot.avreclipse.compiler.option.debug.level"/>
 								<option id="de.innot.avreclipse.compiler.option.optimize.384999" superClass="de.innot.avreclipse.compiler.option.optimize"/>
+								<inputType id="de.innot.avreclipse.compiler.winavr.input.1624362831" name="C Source Files" superClass="de.innot.avreclipse.compiler.winavr.input"/>
 							</tool>
 							<tool id="de.innot.avreclipse.tool.cppcompiler.lib.debug.1289993219" name="AVR C++ Compiler" superClass="de.innot.avreclipse.tool.cppcompiler.lib.debug">
 								<option id="de.innot.avreclipse.cppcompiler.option.debug.level.471884115" superClass="de.innot.avreclipse.cppcompiler.option.debug.level"/>
@@ -83,6 +85,7 @@
 					</folderInfo>
 				</configuration>
 			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
 		</cconfiguration>
 	</storageModule>
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
@@ -94,4 +97,5 @@
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="de.innot.avreclipse.core.AVRGCCManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
 	</storageModule>
+	<storageModule moduleId="refreshScope"/>
 </cproject>

@@ -35,3 +35,12 @@ void delay_ms(uint8_t ms) {
 		 ms--;
 	}
 }
+
+//Bit manipulation
+int bit_get(int p,int m){ return ((p) & (m));}
+void bit_set(int p,int m){ ((p) |= (m));}
+void bit_clear(int p,int m){ ((p) &= ~(m));}
+void bit_flip(int p,int m){ ((p) ^= (m));}
+void bit_write(int c,int p,int m) {(c ? bit_set(p,m) : bit_clear(p,m));}
+int BIT(int x) {return (0x01 << (x));}
+int LONGBIT(int x) {return ((unsigned long)0x00000001 << (x));}

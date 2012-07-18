@@ -20,4 +20,13 @@ void pulse_pin(int port, int pin);
 
 void delay_ms(uint8_t ms);
 
+//Bit manipulation
+int bit_get(int p,int m);
+void bit_set(int p,int m);
+void bit_clear(int p,int m);
+void bit_flip(int p,int m);
+void bit_write(int c,int p,int m);
+int BIT(int x);
+int LONGBIT(int x);
+
 #endif /* AVR_STANDARD_H_ */
